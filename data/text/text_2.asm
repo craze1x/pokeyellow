@@ -1071,6 +1071,36 @@ _MustRechargeText::
 	line "must recharge!"
 	prompt
 
+_TruantText::
+	text "<USER>"
+	line "is loafing around!"
+	prompt
+
+_EncoreText::
+	text "<USER> must"
+	line "perform an encore!"
+	prompt
+
+_EncoreEndText::
+	text "<TARGET> ended"
+	line "it's encore!"
+	prompt
+
+_EncoreAltAText::
+	text "<TARGET> AAA"
+	line "AAAAAAAAAAAA!"
+	prompt
+
+_EncoreAltBText::
+	text "<TARGET> BBB"
+	line "BBBBBBBBBBBB!"
+	prompt
+
+_YawnText::
+	text "<TARGET>"
+	line "is drowsy!"
+	prompt
+
 _DisabledNoMoreText::
 	text "<USER>'s"
 	line "disabled no more!"

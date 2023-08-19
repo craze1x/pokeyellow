@@ -302,6 +302,10 @@ MainInBattleLoop:
 	ld a, [wPlayerBattleStatus2]
 	and (1 << NEEDS_TO_RECHARGE) | (1 << USING_RAGE) ; check if the player is using Rage or needs to recharge
 	jr nz, .selectEnemyMove
+; Check for truant
+	ld a, [wPlayerBattleStatus3]
+	and (1 << TRUANT)
+	jr nz, .selectEnemyMove
 ; the player is not using Rage and doesn't need to recharge
 	ld hl, wEnemyBattleStatus1
 	res FLINCHED, [hl] ; reset flinch bit
@@ -424,6 +428,7 @@ MainInBattleLoop:
 	ldh [hWhoseTurn], a
 	callfar TrainerAI
 	jr c, .AIActionUsedEnemyFirst
+	call EncoreTextCheck
 	call ExecuteEnemyMove
 	ld a, [wEscapedFromBattle]
 	and a ; was Teleport, Road, or Whirlwind used to escape from battle?
@@ -444,6 +449,8 @@ MainInBattleLoop:
 	jp z, HandleEnemyMonFainted
 	call HandlePoisonBurnLeechSeed
 	jp z, HandlePlayerMonFainted
+	call HandleYawn
+	call HandleEncore
 	call DrawHUDsAndHPBars
 	call CheckNumAttacksLeft
 	jp MainInBattleLoop
@@ -462,6 +469,7 @@ MainInBattleLoop:
 	ldh [hWhoseTurn], a
 	callfar TrainerAI
 	jr c, .AIActionUsedPlayerFirst
+	call EncoreTextCheck
 	call ExecuteEnemyMove
 	ld a, [wEscapedFromBattle]
 	and a ; was Teleport, Road, or Whirlwind used to escape from battle?
@@ -472,6 +480,8 @@ MainInBattleLoop:
 .AIActionUsedPlayerFirst
 	call HandlePoisonBurnLeechSeed
 	jp z, HandleEnemyMonFainted
+	call HandleYawn
+	call HandleEncore
 	call DrawHUDsAndHPBars
 	call CheckNumAttacksLeft
 	jp MainInBattleLoop
@@ -674,6 +684,112 @@ HandlePoisonBurnLeechSeed_IncreaseEnemyHP:
 	pop hl
 	ret
 
+HandleYawn:
+	ld hl, wEnemyYawnTurns
+	ld a, [hl]
+	and a
+	jr z, .silentFail
+	dec a ; decrement yawn counter
+	ld [hl], a
+	and $f ; did yawn counter hit 0?
+	jr nz, .drowsyText
+.putToSleep
+	ld de, wEnemyMonStatus
+	ld bc, wEnemyBattleStatus2
+	ld a, [bc]
+	bit NEEDS_TO_RECHARGE, a ; does the target need to recharge? (hyper beam)
+	res NEEDS_TO_RECHARGE, a ; target no longer needs to recharge
+	ld [bc], a
+	jr nz, .setSleepCounter ; if the target had to recharge, all hit tests will be skipped
+	                        ; including the event where the target already has another status
+	ld a, [de]
+	ld b, a
+	and $7
+	jr nz, .silentFail ; can't affect a mon that is already asleep
+.notAlreadySleeping
+	ld a, b
+	and a
+	jr nz, .silentFail ; can't affect a mon that is already statused
+	jp .setSleepCounter
+.setSleepCounter
+	call BattleRandom
+	and $7
+	jr z, .setSleepCounter
+	ld [de], a
+.playSleepAnim
+	ld a, SLP_ANIM
+	ld [wAnimationID], a
+	call PlayAnimation
+.handleYawnSleepText
+	ldh a, [hWhoseTurn]
+	push af
+	ld a, $0
+	ldh [hWhoseTurn], a
+	ld hl, FellAsleepText
+	call PrintText
+	pop af
+	ldh [hWhoseTurn], a
+	ret
+.drowsyText
+	ldh a, [hWhoseTurn]
+	push af
+	ld a, $0
+	ldh [hWhoseTurn], a
+	ld hl, YawnText
+	call PrintText
+	pop af
+	ldh [hWhoseTurn], a
+	ret
+.silentFail
+	ret
+
+YawnText:
+	text_far _YawnText
+	text_end
+
+HandleEncore:
+	ld de, wEnemyEncoredMove
+	ld a, [de]
+	and $7
+	jr z, .silentFail
+	dec a		; dec encore counter
+	ld [de], a
+	and a ; did encore counter hit 0?
+	jr nz, .silentFail ; can't affect a mon that is already asleep
+.encoreEnded
+	ldh a, [hWhoseTurn]
+	push af
+	ld a, $0
+	ldh [hWhoseTurn], a
+	ld hl, EncoreEndedText
+	call PrintText
+	pop af
+	ldh [hWhoseTurn], a
+.silentFail
+	ret
+
+EncoreEndedText:
+	text_far _EncoreEndText
+	text_end
+
+EncoredTextAltB:
+	text_far _EncoreAltBText
+	text_end
+
+EncoreTextCheck:
+	ld de, wEnemyEncoredMove
+	ld a, [de]
+	and $7
+	jr z, .silentFail
+	ld hl, EncoredText
+	call PrintText
+.silentFail
+	ret
+
+EncoredText:
+	text_far _EncoreText
+	text_end
+
 UpdateCurMonHPBar:
 	hlcoord 10, 9    ; tile pointer to player HP bar
 	ldh a, [hWhoseTurn]
@@ -771,6 +887,8 @@ FaintEnemyPokemon:
 	ld [hli], a
 	ld [hl], a
 	ld [wEnemyDisabledMove], a
+	ld [wEnemyYawnTurns], a
+	ld [wEnemyEncoredMove], a
 	ld [wEnemyDisabledMoveNumber], a
 	ld [wEnemyMonMinimized], a
 	ld hl, wPlayerUsedMove
@@ -1336,6 +1454,8 @@ EnemySendOutFirstMon:
 	ld [hli], a
 	ld [hl], a
 	ld [wEnemyDisabledMove], a
+	ld [wEnemyYawnTurns], a
+	ld [wEnemyEncoredMove], a
 	ld [wEnemyDisabledMoveNumber], a
 	ld [wEnemyMonMinimized], a
 	ld hl, wPlayerUsedMove
@@ -3110,10 +3230,19 @@ SelectEnemyMove:
 	ret nz
 	ld a, [wPlayerBattleStatus1]
 	bit USING_TRAPPING_MOVE, a ; caught in player's trapping move (e.g. wrap)
-	jr z, .canSelectMove
+	jr z, .encoreCheck
 .unableToSelectMove
 	ld a, $ff
 	jr .done
+.encoreCheck
+	ld de, wEnemyEncoredMove
+	ld a, [de]
+	and $7
+	jr z, .canSelectMove
+.useEncoredMove
+	ld a, [wEnemyUsedMove]
+	ld [wEnemySelectedMove], a
+	ret
 .canSelectMove
 	ld hl, wEnemyMonMoves+1 ; 2nd enemy move
 	ld a, [hld]
@@ -3163,6 +3292,10 @@ SelectEnemyMove:
 .linkedOpponentUsedStruggle
 	ld a, STRUGGLE
 	jr .done
+
+EncoredTextAltA:
+	text_far _EncoreAltAText
+	text_end
 
 ; this appears to exchange data with the other gameboy during link battles
 LinkBattleExchangeData:
@@ -3542,9 +3675,20 @@ CheckPlayerStatusConditions:
 .HyperBeamCheck
 	ld hl, wPlayerBattleStatus2
 	bit NEEDS_TO_RECHARGE, [hl]
-	jr z, .AnyMoveDisabledCheck
+	jr z, .TruantCheck
 	res NEEDS_TO_RECHARGE, [hl] ; reset player's recharge status
 	ld hl, MustRechargeText
+	call PrintText
+	ld hl, ExecutePlayerMoveDone ; player can't move this turn
+	jp .returnToHL
+
+.TruantCheck
+	ld hl, wPlayerBattleStatus3
+	bit TRUANT, [hl]
+	set TRUANT, [hl]
+	jr z, .AnyMoveDisabledCheck
+	res TRUANT, [hl] ; reset player's recharge status
+	ld hl, TruantText
 	call PrintText
 	ld hl, ExecutePlayerMoveDone ; player can't move this turn
 	jp .returnToHL
@@ -3766,6 +3910,10 @@ FlinchedText:
 
 MustRechargeText:
 	text_far _MustRechargeText
+	text_end
+
+TruantText:
+	text_far _TruantText
 	text_end
 
 DisabledNoMoreText:

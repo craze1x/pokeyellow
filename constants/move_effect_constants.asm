@@ -60,7 +60,7 @@
 	const SPECIAL_UP2_EFFECT         ; $35
 	const ACCURACY_UP2_EFFECT        ; $36
 	const EVASION_UP2_EFFECT         ; $37
-	const HEAL_EFFECT                ; $38 Recover, Softboiled, Rest
+	const HEAL_EFFECT                ; $38 Recover, Softboiled, Rest, Slackoff
 	const TRANSFORM_EFFECT           ; $39
 	const ATTACK_DOWN2_EFFECT        ; $3A
 	const DEFENSE_DOWN2_EFFECT       ; $3B
@@ -91,4 +91,7 @@
 	const LEECH_SEED_EFFECT          ; $54
 	const SPLASH_EFFECT              ; $55
 	const DISABLE_EFFECT             ; $56
+	const SWAGGER_EFFECT             ; $57
+	const YAWN_EFFECT                ; $58
+	const ENCORE_EFFECT              ; $59
 DEF NUM_MOVE_EFFECTS EQU const_value - 1

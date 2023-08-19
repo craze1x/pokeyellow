@@ -164,6 +164,11 @@ AttackAnimationPointers:
 	dw SuperFangAnim
 	dw SlashAnim
 	dw SubstituteAnim
+	dw SlackOffAnim
+	dw FaintAttackAnim
+	dw SwaggerAnim
+	dw YawnAnim
+	dw EncoreAnim
 	dw StruggleAnim
 	assert_table_length NUM_ATTACKS
 	dw ShowPicAnim
@@ -1272,4 +1277,29 @@ ThrowRockAnim:
 
 ThrowBaitAnim:
 	battle_anim BARRAGE, SUBANIM_0_SAFARI_BAIT, 0, 3
+	db -1 ; end
+
+SlackOffAnim:
+	battle_anim RECOVER, SE_BLINK_MON
+	battle_anim NO_MOVE, SE_LIGHT_SCREEN_PALETTE
+	battle_anim NO_MOVE, SE_SPIRAL_BALLS_INWARD
+	battle_anim NO_MOVE, SE_RESET_SCREEN_PALETTE
+	db -1 ; end
+
+FaintAttackAnim:
+	battle_anim LEECH_SEED, SE_DARK_SCREEN_PALETTE
+	battle_anim SWIFT, SUBANIM_1_STARS_SMALL_TOSS, 1, 3
+	battle_anim NO_MOVE, SE_RESET_SCREEN_PALETTE
+	db -1 ; end
+	
+SwaggerAnim:
+	battle_anim POISON_GAS, SUBANIM_1_CLOUD_TOSS, 1, 6
+	db -1 ; end
+
+YawnAnim:
+	battle_anim POISON_GAS, SUBANIM_0_HEART_1_MUSIC, 1, 6
+	db -1 ; end
+
+EncoreAnim:
+	battle_anim GROWL, SUBANIM_0_HEART_1_MUSIC, 1, 6
 	db -1 ; end

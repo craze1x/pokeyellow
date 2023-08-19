@@ -34,6 +34,8 @@ HazeEffect_:
 	xor a
 	ld [wPlayerDisabledMove], a
 	ld [wEnemyDisabledMove], a
+	ld [wEnemyYawnTurns], a
+	ld [wEnemyEncoredMove], a
 	ld hl, wPlayerDisabledMoveNumber
 	ld [hli], a
 	ld [hl], a

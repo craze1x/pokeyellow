@@ -428,10 +428,13 @@ MewEvosMoves:
 ; Evolutions
 	db 0
 ; Learnset
-	db 10, TRANSFORM
-	db 20, MEGA_PUNCH
-	db 30, METRONOME
-	db 40, PSYCHIC_M
+	db 7, ENCORE
+	db 13, SLACKOFF
+	db 19, FAINTATTACK
+	db 25, AMNESIA
+	db 36, CONFUSE_RAY
+	db 37, COUNTER
+	db 43, BODY_SLAM
 	db 0
 
 GyaradosEvosMoves:

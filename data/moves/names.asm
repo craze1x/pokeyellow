@@ -164,5 +164,10 @@ MoveNames::
 	li "SUPER FANG"
 	li "SLASH"
 	li "SUBSTITUTE"
+	li "SLACK OFF"
+	li "FAINT ATTACK"
+	li "SWAGGER"
+	li "YAWN"
+	li "ENCORE"
 	li "STRUGGLE"
 	assert_list_length NUM_ATTACKS

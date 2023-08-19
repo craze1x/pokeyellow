@@ -100,3 +100,7 @@ DEF SPDSPCDV_TRAINER EQU $88
 	const HAS_LIGHT_SCREEN_UP ; 1
 	const HAS_REFLECT_UP      ; 2
 	const TRANSFORMED         ; 3
+	const TRUANT              ; 4
+	const YAWNED              ; 5
+	const ENCORED             ; 6
+	

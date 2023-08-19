@@ -81,7 +81,7 @@ IF DEF(_DEBUG)
 	ld [hli], a
 	ld a, NUM_POKEMON
 	ld [hli], a ; hl = wUnknownDebugByte
-	ld a, STARTER_PIKACHU
+	ld a, MEW
 	ld [hl], a ; hl = wPlayerStarter
 
 	; Give max money.

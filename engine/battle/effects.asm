@@ -1337,6 +1337,225 @@ SplashEffect:
 	call PlayCurrentMoveAnimation
 	jp PrintNoEffectText
 
+SwaggerEffect:
+	call MoveHitTest
+	ld a, [wMoveMissed]
+	and a
+	jp nz, SwaggerMoveMissed
+	ld hl, wEnemyBattleStatus1
+	bit CONFUSED, [hl] ; is mon confused?
+	call z, ConfusionEffect
+	jr z, .swaggerLoadStats
+	call PlayCurrentMoveAnimation
+.swaggerLoadStats
+	ld hl, wEnemyMonStatMods ; Invert these as compared to normal statup code
+	ldh a, [hWhoseTurn]
+	and a
+	jr z, .swaggerStatModifierUpEffect
+	ld hl, wPlayerMonStatMods
+.swaggerStatModifierUpEffect
+	ld a, ATTACK_UP2_EFFECT
+	sub ATTACK_UP1_EFFECT
+	cp EVASION_UP1_EFFECT + $3 - ATTACK_UP1_EFFECT ; covers all +1 effects
+	jr c, .swaggerIncrementStatMod
+	sub ATTACK_UP2_EFFECT - ATTACK_UP1_EFFECT ; map +2 effects to equivalent +1 effect
+.swaggerIncrementStatMod
+	ld c, a
+	ld b, $0
+	add hl, bc
+	ld b, [hl]
+	inc b ; increment corresponding stat mod
+	ld a, $d
+	cp b ; can't raise stat past +6 ($d or 13)
+	jp c, PrintNothingHappenedText
+	ld a, [de]
+	cp ATTACK_UP1_EFFECT + $8 ; is it a +2 effect?
+	jr c, .ok
+	inc b ; if so, increment stat mod again
+	ld a, $d
+	cp b ; unless it's already +6
+	jr nc, .ok
+	ld b, a
+.ok
+	ld [hl], b
+	ld a, c
+	cp $4
+	jr nc, SwaggerUpdateStatDone ; jump if mod affected is evasion/accuracy
+	push hl
+	ld hl, wEnemyMonAttack + 1
+	ld de, wEnemyMonUnmodifiedAttack
+	ldh a, [hWhoseTurn]
+	and a
+	jr z, .swaggerPointToStats
+	ld hl, wBattleMonAttack + 1
+	ld de, wPlayerMonUnmodifiedAttack
+.swaggerPointToStats
+	push bc
+	sla c
+	ld b, $0
+	add hl, bc ; hl = modified stat
+	ld a, c
+	add e
+	ld e, a
+	jr nc, .swaggerCheckIf999
+	inc d ; de = unmodified (original) stat
+.swaggerCheckIf999
+	pop bc
+	; check if stat is already 999
+	ld a, [hld]
+	sub LOW(MAX_STAT_VALUE)
+	jr nz, .swaggerRecalculateStat
+	ld a, [hl]
+	sbc HIGH(MAX_STAT_VALUE)
+	jp z, RestoreOriginalStatModifier
+.swaggerRecalculateStat ; recalculate affected stat
+                 ; paralysis and burn penalties, as well as badge boosts are ignored
+	push hl
+	push bc
+	ld hl, StatModifierRatios
+	dec b
+	sla b
+	ld c, b
+	ld b, $0
+	add hl, bc
+	pop bc
+	xor a
+	ldh [hMultiplicand], a
+	ld a, [de]
+	ldh [hMultiplicand + 1], a
+	inc de
+	ld a, [de]
+	ldh [hMultiplicand + 2], a
+	ld a, [hli]
+	ldh [hMultiplier], a
+	call Multiply
+	ld a, [hl]
+	ldh [hDivisor], a
+	ld b, $4
+	call Divide
+	pop hl
+; cap at MAX_STAT_VALUE (999)
+	ldh a, [hProduct + 3]
+	sub LOW(MAX_STAT_VALUE)
+	ldh a, [hProduct + 2]
+	sbc HIGH(MAX_STAT_VALUE)
+	jp c, SwaggerUpdateStat
+	ld a, HIGH(MAX_STAT_VALUE)
+	ldh [hMultiplicand + 1], a
+	ld a, LOW(MAX_STAT_VALUE)
+	ldh [hMultiplicand + 2], a
+
+SwaggerUpdateStat:
+	ldh a, [hProduct + 2]
+	ld [hli], a
+	ldh a, [hProduct + 3]
+	ld [hl], a
+	pop hl
+SwaggerUpdateStatDone:
+	ld b, c
+	inc b
+	call PrintStatText
+	ld hl, wEnemyBattleStatus2
+	ld de, wEnemyMoveNum
+	ld bc, wEnemyMonMinimized
+	ldh a, [hWhoseTurn]
+	and a
+	jr z, .swaggerPlayerTurn
+	ld hl, wPlayerBattleStatus2
+	ld de, wPlayerMoveNum
+	ld bc, wPlayerMonMinimized
+.swaggerPlayerTurn
+	ld a, [de]
+	cp MINIMIZE
+	jr nz, .swaggerNotMinimize
+ ; if a substitute is up, slide off the substitute and show the mon pic before
+ ; playing the minimize animation
+	bit HAS_SUBSTITUTE_UP, [hl]
+	push af
+	push bc
+	push de
+	ld hl, HideSubstituteShowMonAnim
+	ld b, BANK(HideSubstituteShowMonAnim)
+	call nz, Bankswitch
+	pop de
+.swaggerNotMinimize
+	ld a, [de]
+	cp MINIMIZE
+	jr nz, .swaggerApplyBadgeBoostsAndStatusPenalties
+	pop bc
+	ld a, $1
+	ld [bc], a
+	ld hl, ReshowSubstituteAnim
+	ld b, BANK(ReshowSubstituteAnim)
+	pop af
+	call nz, Bankswitch
+.swaggerApplyBadgeBoostsAndStatusPenalties
+	ldh a, [hWhoseTurn]
+	and a
+	call nz, ApplyBadgeStatBoosts ; whenever the player uses a stat-up move, badge boosts get reapplied again to every stat,
+	                             ; even to those not affected by the stat-up move (will be boosted further)
+	ld hl, MonsStatsRoseText
+	call PrintText
+
+; these shouldn't be here
+	call QuarterSpeedDueToParalysis ; apply speed penalty to the player whose turn is not, if it's paralyzed
+	jp HalveAttackDueToBurn ; apply attack penalty to the player whose turn is not, if it's burned
+SwaggerMoveMissed:
+	jp PrintButItFailedText_
+
+
+
+
+; Always assumes used on enemy
+YawnEffect:
+	ld hl, wEnemyMonStatus
+.yawnEffect
+	call CheckTargetSubstitute
+	jr nz, .noEffect ; can't poison a substitute target
+	ld a, [hl]
+	ld b, a
+	and a
+	jr nz, .noEffect ; miss if target is already statused
+	ld hl, wEnemyYawnTurns
+	ld a, [hl]
+	ld b, a
+	and a
+	jr nz, .noEffect ; Already yawned
+	ld [hl], $2
+	call PlayCurrentMoveAnimation
+	ret
+.noEffect
+	jp PrintNoEffectText
+.didntAffect
+	ld c, 50
+	call DelayFrames
+
+EncoreEffect:
+	call MoveHitTest
+	ld a, [wMoveMissed]
+	and a
+	jr nz, .moveMissed
+.alreadyEncored ; no effect if target already has a move encored
+	ld de, wEnemyEncoredMove
+	ld a, [de]
+	and $7
+	jr nz, .moveMissed
+.noMoveUsedYet
+	ld a, [wEnemyUsedMove]
+	and a ; has the target selected any move yet?
+	jr z, .moveMissed
+.applyEncore
+	call BattleRandom
+	and $7
+	jr z, .applyEncore
+	ld [de], a
+	ld a, [wEnemyUsedMove]
+	ld [wEnemySelectedMove], a
+	call PlayCurrentMoveAnimation
+	ret
+.moveMissed
+	jp PrintButItFailedText_
+
 DisableEffect:
 	call MoveHitTest
 	ld a, [wMoveMissed]

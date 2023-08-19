@@ -74,7 +74,7 @@ OakSpeech:
 	call PrintText
 	call GBFadeOutToWhite
 	call ClearScreen
-	ld a, STARTER_PIKACHU
+	ld a, MEW
 	ld [wd0b5], a
 	ld [wcf91], a
 	call GetMonHeader

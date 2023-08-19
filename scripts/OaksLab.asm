@@ -1009,7 +1009,7 @@ OaksLabRivalTakesText5:
 
 OaksLabText18:
 	text_asm
-	ld a, STARTER_PIKACHU
+	ld a, MEW
 	ld [wPlayerStarter], a
 	ld [wd11e], a
 	call GetMonName
@@ -1023,7 +1023,7 @@ OaksLabText18:
 	ld [wMonDataLocation], a
 	ld a, 5
 	ld [wCurEnemyLVL], a
-	ld a, STARTER_PIKACHU
+	ld a, MEW
 	ld [wd11e], a
 	ld [wcf91], a
 	call AddPartyMon

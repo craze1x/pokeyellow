@@ -175,5 +175,10 @@ Moves:
 	move SUPER_FANG,   SUPER_FANG_EFFECT,            1, NORMAL,        90, 10
 	move SLASH,        NO_ADDITIONAL_EFFECT,        70, NORMAL,       100, 20
 	move SUBSTITUTE,   SUBSTITUTE_EFFECT,            0, NORMAL,       100, 10
+	move SLACKOFF,     HEAL_EFFECT,                  0, NORMAL,       100, 10
+	move FAINTATTACK,  SWIFT_EFFECT,                60, GHOST,        100, 20
+	move SWAGGER,      SWAGGER_EFFECT,               0, NORMAL,        90, 15
+	move YAWN,         YAWN_EFFECT,                  0, NORMAL,       100, 10
+	move ENCORE,       ENCORE_EFFECT,                0, NORMAL,       100, 10
 	move STRUGGLE,     RECOIL_EFFECT,               50, NORMAL,       100, 10
 	assert_table_length NUM_ATTACKS

@@ -1450,6 +1450,7 @@ wPlayerBattleStatus2:: db
 ; bit 1 - light screen
 ; bit 2 - reflect
 ; bit 3 - transformed
+; bit 4 - Truant
 wPlayerBattleStatus3:: db
 
 ; always 0
@@ -1473,8 +1474,6 @@ wPlayerToxicCounter:: db
 ; low nibble: disable turns left
 wPlayerDisabledMove:: db
 
-	ds 1
-
 ; when the enemy is attacking multiple times, the number of attacks left
 wEnemyNumAttacksLeft:: db
 
@@ -1486,7 +1485,12 @@ wEnemyToxicCounter:: db
 ; low nibble: disable turns left
 wEnemyDisabledMove:: db
 
-	ds 1
+; high nibble: encored move (1-4)
+; low nibble: encore turns left
+wEnemyEncoredMove:: db
+
+; yawn turns left
+wEnemyYawnTurns:: db
 
 UNION
 ; the amount of damage accumulated by the player while biding
