@@ -32,3 +32,9 @@
 *.sn*
 *.sa*
 *.sg1
+*.ss1
+
+#other
+*.vsidx
+.vs/*
+*.stackdump
