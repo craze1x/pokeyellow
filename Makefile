@@ -1,6 +1,7 @@
 roms := \
 	pokeyellow.gbc \
-	pokeyellow_debug.gbc
+	pokeyellow_debug.gbc \
+	pokeyellow_test.gbc
 patches := \
 	pokeyellow.patch
 
@@ -19,6 +20,7 @@ rom_obj := \
 pokeyellow_obj       := $(rom_obj)
 pokeyellow_debug_obj := $(rom_obj:.o=_debug.o)
 pokeyellow_vc_obj    := $(rom_obj:.o=_vc.o)
+pokeyellow_test_obj  := $(rom_obj:.o=_test.o)
 
 
 ### Build tools
@@ -42,12 +44,13 @@ RGBLINK ?= $(RGBDS)rgblink
 .SECONDEXPANSION:
 .PRECIOUS:
 .SECONDARY:
-.PHONY: all yellow yellow_debug clean tidy compare tools
+.PHONY: all yellow yellow_debug yellow_test clean tidy compare tools
 
 all: $(roms)
 yellow:       pokeyellow.gbc
 yellow_debug: pokeyellow_debug.gbc
 yellow_vc:    pokeyellow.patch
+yellow_test:  pokeyellow_test.gbc
 
 clean: tidy
 	find gfx \
@@ -71,6 +74,7 @@ tidy:
 	      $(pokeyellow_obj) \
 	      $(pokeyellow_vc_obj) \
 	      $(pokeyellow_debug_obj) \
+		  $(pokeyellow_test_obj) \
 	      rgbdscheck.o
 	$(MAKE) clean -C tools/
 
@@ -89,6 +93,7 @@ endif
 
 $(pokeyellow_debug_obj): RGBASMFLAGS += -D _DEBUG
 $(pokeyellow_vc_obj):    RGBASMFLAGS += -D _YELLOW_VC
+$(pokeyellow_test_obj):  RGBASMFLAGS += -D _TEST
 
 %.patch: vc/%.constants.sym %_vc.gbc %.gbc vc/%.patch.template
 	tools/make_patch $*_vc.sym $^ $@
@@ -115,6 +120,7 @@ endef
 $(foreach obj, $(pokeyellow_obj), $(eval $(call DEP,$(obj),$(obj:.o=.asm))))
 $(foreach obj, $(pokeyellow_debug_obj), $(eval $(call DEP,$(obj),$(obj:_debug.o=.asm))))
 $(foreach obj, $(pokeyellow_vc_obj), $(eval $(call DEP,$(obj),$(obj:_vc.o=.asm))))
+$(foreach obj, $(pokeyellow_test_obj), $(eval $(call DEP,$(obj),$(obj:_test.o=.asm))))
 
 # Dependencies for VC files that need to run scan_includes
 %.constants.sym: %.constants.asm $(shell tools/scan_includes %.constants.asm) $(preinclude_deps) | rgbdscheck.o
@@ -129,6 +135,7 @@ endif
 pokeyellow_pad       = 0x00
 pokeyellow_debug_pad = 0xff
 pokeyellow_vc_pad    = 0x00
+pokeyellow_test_pad  = 0xff
 
 opts = -cjsv -k 01 -l 0x33 -m 0x1b -p 0 -r 03 -t "POKEMON YELLOW"
 

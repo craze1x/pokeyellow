@@ -226,6 +226,8 @@ ROMX $3E
 ROMX $3F
 	"Overworld Pikachu"
 	"NPC Sprites 3"
+ROMX $40
+	"Tests"
 WRAM0
 	"Audio RAM"
 	org $c100

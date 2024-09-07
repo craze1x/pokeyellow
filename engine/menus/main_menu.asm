@@ -179,7 +179,11 @@ ContinueText:
 	; fallthrough
 
 NewGameText:
-	db   "NEW GAME"
+if DEF(_TEST)
+	db "RUN TESTS"
+ELSE
+	db "NEW GAME"
+ENDC
 	next "OPTION@"
 
 DisplayContinueGameInfo:
